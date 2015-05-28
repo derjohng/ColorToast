@@ -1,4 +1,4 @@
-colorToast for iOS
+ColorToast for iOS
 =============
 
 ColorToast is an Objective-C category that adds Android-style toast notifications to the UIView object class. It is intended to be simple, lightweight, and easy to use.
