@@ -8,7 +8,7 @@ Modified from: [Toast](https://github.com/scalessec/Toast)
 
 Screenshots
 ---------
-![Toast Screenshots](http://i.imgur.com/oM28l.png)
+![Toast Screenshots](http://derjohng.doitwell.tw/wp-content/uploads/2015/05/0529_002-1024x499.png)
 
 
 Examples
