@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name         = "ColorToast"
-  s.version      = "1.0.1"
+  s.version      = "1.0.2"
   s.summary      = "A UIView category that adds Android-style color toast notifications to iOS."
   s.homepage     = "https://github.com/derjohng/ColorToast"
   s.license      = 'MIT'
