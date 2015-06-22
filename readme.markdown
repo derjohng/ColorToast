@@ -34,6 +34,9 @@ Examples
                 
 // display toast with an activity spinner
 [self.view makeToastActivity];
+
+// display toast with an activity spinnerwith message
+[self.view makeToastActivity:@"Loading"];
 ```
     
 See the demo project for more examples.

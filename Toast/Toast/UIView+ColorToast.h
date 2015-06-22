@@ -44,7 +44,9 @@ extern NSString * const CSToastPositionBottom;
 
 // displays toast with an activity spinner
 - (void)makeToastActivity;
-- (void)makeToastActivity:(id)position;
+- (void)makeToastActivity:(NSString *)mesg;
+- (void)makeToastActivity:(id)position message:(NSString *)mesg;
+//- (void)makeToastActivity:(id)position;
 - (void)hideToastActivity;
 
 // the showToast methods display any view as toast

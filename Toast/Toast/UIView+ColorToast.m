@@ -79,6 +79,10 @@ NSString * const CSToastPositionBottom          = @"bottom";
     [self makeToast:message duration:CSToastDefaultDuration position:nil];
 }
 
+- (void)makeToast:(NSString *)message position:(id)position {
+    [self makeToast:message duration:CSToastDefaultDuration position:position];
+}
+
 - (void)makeToast:(NSString *)message duration:(NSTimeInterval)duration position:(id)position
 {
     UIView *toast = [self viewForMessage:message title:nil image:nil];
@@ -170,15 +174,25 @@ NSString * const CSToastPositionBottom          = @"bottom";
 
 #pragma mark - Toast Activity Methods
 - (void)makeToastActivity {
-    [self makeToastActivity:CSToastActivityDefaultPosition];
+    [self makeToastActivity:CSToastActivityDefaultPosition message:nil];
 }
 
-- (void)makeToastActivity:(id)position {
+- (void)makeToastActivity:(NSString *)mesg {
+    [self makeToastActivity:CSToastActivityDefaultPosition message:mesg];
+}
+
+- (void)makeToastActivity:(id)position message:(NSString *)mesg {
     // sanity
     UIView *existingActivityView = (UIView *)objc_getAssociatedObject(self, &CSToastActivityViewKey);
     if (existingActivityView != nil) return;
+  
+    UIView *activityView;
+    if (mesg!=nil) {
+        activityView = [self viewForMessageActivity:mesg];
+    } else {
+        activityView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, CSToastActivityWidth, CSToastActivityHeight)];
+    }
     
-    UIView *activityView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, CSToastActivityWidth, CSToastActivityHeight)];
     activityView.center = [self centerPointForPosition:position withToast:activityView];
     if (self.toastBackgroundColor==nil) self.toastBackgroundColor = [UIColor blackColor];
     activityView.backgroundColor = [self.toastBackgroundColor colorWithAlphaComponent:CSToastOpacity];
@@ -192,11 +206,14 @@ NSString * const CSToastPositionBottom          = @"bottom";
         activityView.layer.shadowRadius = CSToastShadowRadius;
         activityView.layer.shadowOffset = CSToastShadowOffset;
     }
+   
+    if (mesg==nil) {
+        UIActivityIndicatorView *activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        activityIndicatorView.center = CGPointMake(activityView.bounds.size.width/2, activityView.bounds.size.height/2);
+        [activityView addSubview:activityIndicatorView];
+        [activityIndicatorView startAnimating];
+    }
     
-    UIActivityIndicatorView *activityIndicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
-    activityIndicatorView.center = CGPointMake(activityView.bounds.size.width / 2, activityView.bounds.size.height / 2);
-    [activityView addSubview:activityIndicatorView];
-    [activityIndicatorView startAnimating];
     
     // associate the activity view with self
     objc_setAssociatedObject (self, &CSToastActivityViewKey, activityView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
@@ -392,6 +409,90 @@ NSString * const CSToastPositionBottom          = @"bottom";
         [wrapperView addSubview:imageView];
     }
         
+    return wrapperView;
+}
+
+- (UIView *)viewForMessageActivity:(NSString *)message
+{
+    // sanity
+    if (message == nil)  return nil;
+    
+    // dynamically build a toast view with any combination of message, title, & image.
+    UILabel *messageLabel = nil;
+    
+    // create the parent view
+    UIView *wrapperView = [[UIView alloc] init];
+    wrapperView.autoresizingMask = (UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin);
+    wrapperView.layer.cornerRadius = CSToastCornerRadius;
+    
+    if (CSToastDisplayShadow) {
+        wrapperView.layer.shadowColor = [UIColor blackColor].CGColor;
+        wrapperView.layer.shadowOpacity = CSToastShadowOpacity;
+        wrapperView.layer.shadowRadius = CSToastShadowRadius;
+        wrapperView.layer.shadowOffset = CSToastShadowOffset;
+    }
+    
+    if (self.toastBackgroundColor==nil) self.toastBackgroundColor = [UIColor blackColor];
+    wrapperView.backgroundColor = [self.toastBackgroundColor colorWithAlphaComponent:CSToastOpacity];
+   
+    // prepare indicatorView
+    UIActivityIndicatorView *indicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    indicatorView.contentMode = UIViewContentModeScaleAspectFit;
+    indicatorView.frame = CGRectMake(CSToastHorizontalPadding, CSToastVerticalPadding, CSToastImageViewWidth, CSToastImageViewHeight);
+    [indicatorView startAnimating];
+    
+    CGFloat indicatorWidth, indicatorHeight, indicatorLeft;
+    if(indicatorView != nil) {
+        indicatorWidth = indicatorView.bounds.size.width;
+        indicatorHeight = indicatorView.bounds.size.height;
+        indicatorLeft = CSToastHorizontalPadding;
+    } else {
+        indicatorWidth = indicatorHeight = indicatorLeft = 0.0;
+    }
+   
+    // prepare messageLabel
+    if (message != nil) {
+        messageLabel = [[UILabel alloc] init];
+        messageLabel.numberOfLines = CSToastMaxMessageLines;
+        messageLabel.font = [UIFont systemFontOfSize:CSToastFontSize];
+        messageLabel.lineBreakMode = NSLineBreakByWordWrapping;
+        messageLabel.textColor = [UIColor whiteColor];
+        messageLabel.backgroundColor = [UIColor clearColor];
+        messageLabel.alpha = 1.0;
+        messageLabel.text = message;
+        
+        // size the message label according to the length of the text
+        CGSize maxSizeMessage = CGSizeMake((self.bounds.size.width * CSToastMaxWidth) - indicatorWidth, self.bounds.size.height * CSToastMaxHeight);
+        CGSize expectedSizeMessage = [self sizeForString:message font:messageLabel.font constrainedToSize:maxSizeMessage lineBreakMode:messageLabel.lineBreakMode];
+        messageLabel.frame = CGRectMake(0.0, 0.0, expectedSizeMessage.width, expectedSizeMessage.height);
+    }
+    
+    CGFloat messageWidth, messageHeight, messageLeft, messageTop;
+    if(messageLabel != nil) {
+        messageWidth = messageLabel.bounds.size.width;
+        messageHeight = messageLabel.bounds.size.height;
+        messageTop = CSToastVerticalPadding + indicatorHeight;
+    } else {
+        messageWidth = messageHeight = messageLeft = messageTop = 0.0;
+    }
+    
+    // wrapper width uses the longerWidth or the image width, whatever is larger. same logic applies to the wrapper height
+    CGFloat wrapperWidth = MAX((indicatorWidth + (CSToastHorizontalPadding*2)), (messageWidth + CSToastHorizontalPadding*2));
+    CGFloat wrapperHeight = (messageTop + messageHeight+CSToastVerticalPadding);
+    
+    wrapperView.frame = CGRectMake(0.0, 0.0, wrapperWidth, wrapperHeight);
+    
+    if(indicatorView != nil) {
+        indicatorView.frame = CGRectMake(0, CSToastVerticalPadding, wrapperWidth, indicatorHeight);
+        [wrapperView addSubview:indicatorView];
+    }
+    
+    if(messageLabel != nil) {
+        messageLabel.frame = CGRectMake(CSToastHorizontalPadding, messageTop, wrapperWidth, messageHeight);
+        [wrapperView addSubview:messageLabel];
+    }
+    
+    
     return wrapperView;
 }
 
