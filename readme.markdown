@@ -35,7 +35,7 @@ Examples
 // display toast with an activity spinner
 [self.view makeToastActivity];
 
-// display toast with an activity spinnerwith message
+// display toast with an activity spinner with message
 [self.view makeToastActivity:@"Loading"];
 ```
     
@@ -48,7 +48,7 @@ Install with [CocoaPods](http://cocoapods.org) by adding the following to your P
 
 ``` ruby
 platform :ios, '7.0'
-pod 'ColorToast', '~> 1.0'
+pod 'ColorToast', '~> 1.1'
 ```
 
 or add manually: 
